@@ -47,6 +47,10 @@ and then
 - Although member functions are handled with no issues the best way to call member functions is to use a lambda that will capture the target object, or pass it as a parameter at the call site, and then call its member functions like so: `function_ref<void(T&)> ref( []( T& obj ){ obj.foo(); });`
 - `functionRef` doesn't "call" member data although they are in theory "Callables" - and that is intentional
 
+I provide numerous test cases in main.cpp which you can test for yourself.
+
+I used Windows 8.1 x86_64, Visual Studio 2017, C++17 to build the project. I've also tested it working on Linux.
+
 
 # Contribute
 
