@@ -1,3 +1,5 @@
+#include <string>
+#include <functional>
 #include "functionref.h"
 
 // Tests
@@ -59,14 +61,19 @@ void sayHi()
 	std::cout << "Hi\n";
 }
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
-int sayDoubleHi(int a, int b, double c)
+#ifdef _WIN32
+# pragma warning( push )
+# pragma warning( disable: 4244 )
+#endif
+int sayDoubleHi( int a,
+	int b,
+	double c )
 {
 	return a + b + c;
 }
-#pragma warning(pop)
-
+#ifdef _WIN32
+# pragma warning( pop )
+#endif
 
 void print_num(int i)
 {
