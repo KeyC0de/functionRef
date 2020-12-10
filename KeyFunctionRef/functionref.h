@@ -1,4 +1,4 @@
-#include <iostream>
+#include <type_traits>
 
 //============================================================
 //	\class	functionRef
@@ -14,13 +14,13 @@ class functionRef
 
 template <typename TRet,
 	typename... TArgs>
-class functionRef<TRet(TArgs...)>
+class functionRef<TRet( TArgs... )>
 {
-	using CallbackType = TRet( void*, TArgs... );
-	using CallbackPointerType = std::add_pointer_t<CallbackType>;
+	using TCallback = TRet( void*, TArgs... );
+	using PCallback = std::add_pointer_t<TCallback>;
 
-	void* m_pAddr;
-	CallbackPointerType m_pFn;
+	void* m_pAddr;		// where to *call*
+	PCallback m_pFn;	// the function signature
 public:
 	functionRef()
 		:
@@ -38,7 +38,7 @@ public:
 	//	\brief  templated constructor
 	//	\date	2019/11/20 19:52
 	template <typename F,
-		typename = std::enable_if_t<std::is_convertible_v<std::result_of_t<F(TArgs...)>,
+		typename = std::enable_if_t<std::is_convertible_v<std::result_of_t<F( TArgs... )>,
 			TRet>>,
 		typename = std::enable_if_t<std::is_invocable_r_v<TRet, F, TArgs...>>,
 		typename = std::enable_if_t<!std::is_same_v<std::decay_t<F>, functionRef>>
@@ -47,13 +47,12 @@ public:
 		:
 		m_pAddr{ (void*)std::addressof( callable ) }
 	{
-		//static_assert(!std::is_member_function_pointer_v<F>,
-		//	"This class doesn't accept member pointers yet..");
 		if ( std::addressof( callable ) != nullptr )
 		{
 			m_pFn = [](void* po, TArgs... args) -> TRet
 			{
-				return ( *reinterpret_cast<std::add_pointer_t<F>>( po ) )( std::forward<TArgs>( args )... );
+				return ( *reinterpret_cast<std::add_pointer_t<F>>( po ) )
+					( std::forward<TArgs>( args )... );
 			};
 		}
 		else
@@ -70,19 +69,17 @@ public:
 	}
 
 	functionRef( const functionRef& rhs )
-	{
-		void* temp_addr{ rhs.m_pAddr };
-		CallbackPointerType temp_pfn{ rhs.m_pFn };
-		std::swap( m_pAddr, temp_addr );
-		std::swap( m_pFn, temp_pfn );
-	}
+		:
+		m_pAddr{ rhs.m_pAddr },
+		m_pFn{ rhs.m_pFn }
+	{}
 
 	functionRef& operator=( const functionRef& rhs )
 	{
 		if ( this != &rhs )
 		{
 			void* temp_addr{ rhs.m_pAddr };
-			CallbackPointerType temp_pfn{ rhs.m_pFn };
+			PCallback temp_pfn{ rhs.m_pFn };
 			std::swap( m_pAddr, temp_addr );
 			std::swap( m_pFn, temp_pfn );
 		}
@@ -94,6 +91,7 @@ public:
 		m_pAddr{ std::move( rhs.m_pAddr ) },
 		m_pFn{ std::move( rhs.m_pFn ) }
 	{}
+
 	functionRef &operator=( functionRef&& rhs ) noexcept
 	{
 		if ( this != &rhs )
@@ -114,7 +112,8 @@ public:
 	//	\function	setTarget
 	//	\brief  use setTarget to set a member pointer as a target
 	//	\date	2019/11/20 20:55
-	template <typename T, typename FType, 
+	template <typename T,
+		typename FType, 
 		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>>
 	>
 	void setTarget( T& obj,
@@ -123,7 +122,7 @@ public:
 		if ( std::addressof( obj ) != nullptr )
 		{
 			m_pAddr = reinterpret_cast<void*>( std::addressof( obj ) );
-			m_pFn = reinterpret_cast<TRet(*)( void*, TArgs... )>( (void*&)f );
+			m_pFn = reinterpret_cast<TRet( * )( void*, TArgs... )>( (void*&)f );
 		}
 		else
 		{
@@ -132,8 +131,11 @@ public:
 		}
 	}
 
-	// Delete r-value cappables. Not going to maange temporary callables here
-	template <typename T, typename FType>
+	// Delete r-value cappables. Not going to manage temporary callables here
+	template <typename T,
+		typename FType,
+		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>>
+	>
 	void setTarget( T&& ) = delete;
 	
 	bool reset() noexcept
@@ -149,7 +151,8 @@ public:
 
 	inline TRet operator()( TArgs... args ) const
 	{
-		return m_pFn( m_pAddr, std::forward<TArgs>( args )... );
+		return m_pFn( m_pAddr,
+			std::forward<TArgs>( args )... );
 	}
 
 	operator bool() const noexcept
