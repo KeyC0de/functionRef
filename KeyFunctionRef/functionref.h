@@ -9,13 +9,14 @@
 //	\brief	a non-owning wrapper for an arbitrary callable object
 //=============================================================
 template <typename Callable>
-class functionRef;
+class functionRef
+{};
 
-template <typename TReturn,
+template <typename TRet,
 	typename... TArgs>
-class functionRef<TReturn(TArgs...)>
+class functionRef<TRet(TArgs...)>
 {
-	using CallbackType = TReturn( void*, TArgs... );
+	using CallbackType = TRet( void*, TArgs... );
 	using CallbackPointerType = std::add_pointer_t<CallbackType>;
 
 	void* m_pAddr;
@@ -38,8 +39,8 @@ public:
 	//	\date	2019/11/20 19:52
 	template <typename F,
 		typename = std::enable_if_t<std::is_convertible_v<std::result_of_t<F(TArgs...)>,
-			TReturn>>,
-		typename = std::enable_if_t<std::is_invocable_r_v<TReturn, F, TArgs...>>,
+			TRet>>,
+		typename = std::enable_if_t<std::is_invocable_r_v<TRet, F, TArgs...>>,
 		typename = std::enable_if_t<!std::is_same_v<std::decay_t<F>, functionRef>>
 	>
 	constexpr functionRef( F&& callable )
@@ -50,7 +51,7 @@ public:
 		//	"This class doesn't accept member pointers yet..");
 		if ( std::addressof( callable ) != nullptr )
 		{
-			m_pFn = [](void* po, TArgs... args) -> TReturn
+			m_pFn = [](void* po, TArgs... args) -> TRet
 			{
 				return ( *reinterpret_cast<std::add_pointer_t<F>>( po ) )( std::forward<TArgs>( args )... );
 			};
@@ -122,7 +123,7 @@ public:
 		if ( std::addressof( obj ) != nullptr )
 		{
 			m_pAddr = reinterpret_cast<void*>( std::addressof( obj ) );
-			m_pFn = reinterpret_cast<TReturn(*)( void*, TArgs... )>( (void*&)f );
+			m_pFn = reinterpret_cast<TRet(*)( void*, TArgs... )>( (void*&)f );
 		}
 		else
 		{
@@ -146,7 +147,7 @@ public:
 		return false;
 	}
 
-	inline TReturn operator()( TArgs... args ) const
+	inline TRet operator()( TArgs... args ) const
 	{
 		return m_pFn( m_pAddr, std::forward<TArgs>( args )... );
 	}

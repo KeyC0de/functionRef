@@ -2,7 +2,9 @@
 #include <functional>
 #include "functionref.h"
 
+
 // Tests
+
 
 struct TestStruct
 {
@@ -192,7 +194,6 @@ public:
 		c_ = c;
 	}
 };
-
 
 
 int main()
