@@ -445,5 +445,7 @@ int main()
 		<< alignof(functionRef<int(std::string, int, int, double, long double, std::string)>) << '\n';
 
 	std::cout << "echo %errorlevel% should return 11" << '\n';
+
+	std::system( "pause" );
 	return state == 11 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
