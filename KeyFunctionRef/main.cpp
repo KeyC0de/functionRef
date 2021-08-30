@@ -5,8 +5,6 @@
 
 
 // Tests
-
-
 struct TestStruct
 {
 	int i = 5;
@@ -201,27 +199,27 @@ int main()
 {
 	std::cout << std::boolalpha << '\n';
 
-	std::cout << "\n1." << '\n';
+	std::cout << "\n1.\n";
 	functionRef<void()> fr1{ sayHi };
 	std::cout << typeid(fr1).name() << '\n';
 	fr1();
-	std::cout << "\n2." << '\n';
+	std::cout << "\n2.\n";
 	functionRef<int(int, int, double)> frr1{ sayDoubleHi };
 	std::cout << typeid(frr1).name() << '\n';
 	std::cout << frr1(23, 42, 89.4387) << '\n';
 
-	std::cout << "\n3. copy constructing" << '\n';
+	std::cout << "\n3. copy constructing\n";
 	functionRef<int(int, int, double)> fcr1{ frr1 };
 	std::cout << typeid(fcr1).name() << '\n';
 	std::cout << fcr1(23, 42, 89.4387) << '\n';
 
-	std::cout << "\n4. touchStruct" << '\n';
+	std::cout << "\n4. touchStruct\n";
 	functionRef<std::string(double)> fr2{ touchStruct };
 	std::cout << typeid(fr2).name() << '\n';
 	if (fr2)
 		std::cout << fr2(354.89) << '\n';
 
-	std::cout << "\n5. lvalue lambda" << '\n';
+	std::cout << "\n5. lvalue lambda\n";
 	auto lambo = [](char c) -> void
 	{
 		std::cout << "char=" << c << '\n';
@@ -233,18 +231,18 @@ int main()
 	std::cout << typeid(fr3).name() << '\n';
 	fr3('k');
 
-	std::cout << "\n6. prvalue lambda" << '\n';
+	std::cout << "\n6. prvalue lambda\n";
 	auto lambdar = []() { std::cout << "whatever\n"; };
 	functionRef<void()> fr4{ lambdar };
 	fr4();
-	std::cout << "\n7. copy constructing from prvalue lambda" << '\n';
+	std::cout << "\n7. copy constructing from prvalue lambda\n";
 	functionRef<void()> frr4{ fr4 };
 	frr4();
 
 	[[maybe_unused]]
 	volatile int k = 1;
-	std::cout << "\n8. passing an implicitly constructed by a lambda functionRef to a function" << '\n';
-	std::cout << "should print 11" << '\n';
+	std::cout << "\n8. passing an implicitly constructed by a lambda functionRef to a function\n";
+	std::cout << "should print 11\n";
 	fr([&k](volatile auto &y) {
 		y += k;
 	});
@@ -254,7 +252,7 @@ int main()
 	//functionRef<void()> fr5{std::ref(lambdaref)};
 	//fr5();
 
-	std::cout << "\n9." << '\n';
+	std::cout << "\n9.\n";
 	functionRef<int()> invoke_laterr([] { return 42; });
 	auto valr = invoke_laterr();
 	std::cout << valr << '\n';
@@ -266,7 +264,7 @@ int main()
 	TestStruct ts;
 	frm1(ts, 30);
 
-	std::cout << "\n11. initialize functionRef from a capturing/stateful lambda, type is 'int(int)'; simple" << '\n';
+	std::cout << "\n11. initialize functionRef from a capturing/stateful lambda, type is 'int(int)'; simple\n";
 	functionRef<int(int)> frm2 = [&ts](int arg) { return ts.returnInt(arg); };
 	int ret = frm2(100);
 	std::cout << "returned value = " << ret << '\n';
@@ -289,7 +287,7 @@ int main()
 		std::cout << "FunctionRefs not properly copied\n";
 
 	std::cout << "\n13. Copy construction again from a spectre functionRef\n";
-	std::cout << "UB - don't do it, it still works good though" << '\n';
+	std::cout << "UB - don't do it, it still 'works' good though\n";
 	//functionRef il_cpy{ invoke_laterr };	// constructor invoked - invoke_laterr is dead
 	//il_cpy();
 	//if (il_cpy == invoke_laterr)
@@ -302,131 +300,134 @@ int main()
 	fr1_move();
 	//fr1();	// probably valid, but not so safe to use - according to the standard
 
-	std::cout << "\n15. move constructing again from a prvalue lambda" << '\n';
-	std::cout << "still works but UB" << '\n';
+	std::cout << "\n15. move constructing again from a prvalue lambda\n";
+	std::cout << "still 'works' but UB\n";
 	//functionRef<void()> fr3_move{ std::move(lambdar) };
 	//fr3_move();
 	//lambdar('A');	// empty! don't uncomment or UB!
 
-	std::cout << "\n16. resetting" << '\n';
+	std::cout << "\n16. resetting\n";
 	fr1_move.reset();
 	if (fr1_move)
-		std::cout << "fr1_move not properly reset" << '\n';
+		std::cout << "fr1_move not properly reset\n";
 	else
-		std::cout << "fr1_move properly reset" << '\n';
+		std::cout << "fr1_move properly reset\n";
 
-	std::cout << "\n17. initializing with an empty lambda" << '\n';
-	std::cout << "works but don't do it" << '\n';
+	std::cout << "\n17. initializing with an empty lambda\n";
+	std::cout << "'works' but don't do it\n";
 	functionRef<void()> fempty{ [] {} };
 	//fempty();
 	if (fempty)
-		std::cout << "fempty points to valid data - but in an unspecified state" << '\n';
+		std::cout << "fempty points to valid data - but in an unspecified state\n";
 	else
-		std::cout << "fempty nullptr'd" << '\n';
+		std::cout << "fempty nullptr'd\n";
 
-	std::cout << "\n18. initializing with a stateful lambda (should print 20.5)" << '\n';
+	std::cout << "\n18. initializing with a stateful lambda (should print 20.5)\n";
 	int intni = 10;
 	auto lamstateful = [&intni](int i, float f)
 	{
-		std::cout << "stateful lambda captured variable is" << '\n' << "result with supplied argument is =" << static_cast<float>(intni + i + f) << '\n';
+		std::cout << "stateful lambda captured variable is\n"
+			<< "result with supplied argument is ="
+			<< static_cast<float>(intni + i + f)
+			<< '\n';
 	};
 	functionRef<void(int, float)> fstateful{ lamstateful };
 	fstateful(5, 5.5);
 	if (fstateful)
-		std::cout << "fstateful still lives" << '\n';
+		std::cout << "fstateful still lives\n";
 	else
-		std::cout << "fstateful doesn't live" << '\n';
+		std::cout << "fstateful doesn't live\n";
 
-	std::cout << "\n19. Creating functionRef without initialization" << '\n';
+	std::cout << "\n19. Creating functionRef without initialization\n";
 	functionRef<void()> fref;
 	if (!fref)
-		std::cout << "fref is null - good" << '\n';
+		std::cout << "fref is null - good\n";
 	else
-		std::cout << "fref is not null - bad" << '\n';
+		std::cout << "fref is not null - bad\n";
 
-	std::cout << "\n20. Creating functionRef from nullptr" << '\n';
+	std::cout << "\n20. Creating functionRef from nullptr\n";
 	functionRef<void()> frefnull{ nullptr };
 	if (!frefnull)
-		std::cout << "frefnull is null - good" << '\n';
+		std::cout << "frefnull is null - good\n";
 	else
-		std::cout << "frefnull is not null - bad" << '\n';
+		std::cout << "frefnull is not null - bad\n";
 
-	std::cout << "\n21. Testing equality" << '\n';
+	std::cout << "\n21. Testing equality\n";
 	if (fref == frefnull)
-		std::cout << "Empty lambda is equal to null lambda - good" << '\n';
+		std::cout << "Empty lambda is equal to null lambda - good\n";
 	else if (fref != frefnull)
-		std::cout << "Empty lambda is not equal to null lambda - bad" << '\n';
+		std::cout << "Empty lambda is not equal to null lambda - bad\n";
 
-	std::cout << "\n22. Storing and calling a free const function - should print -9" << '\n';
+	std::cout << "\n22. Storing and calling a free const function - should print -9\n";
 	functionRef<void(const int)> f_display = print_numConst;
 	f_display(-9);
 	
 	// Member functions
-	std::cout << "\n23. Store a call to a member function - should print 200" << '\n';
+	std::cout << "\n23. Store a call to a member function - should print 200\n";
 	functionRef<void(int)> f_print_add;
 	Foo foo{};
 	f_print_add.setTarget(foo, &Foo::print_add);
 	f_print_add(100);
 
-	std::cout << "should print 125" << '\n';
+	std::cout << "should print 125\n";
 	functionRef<void(void)> f_print_void;
 	f_print_void.setTarget(foo, &Foo::print_addvoid);
 	f_print_void();
 
-	std::cout << "\n24. Store a call to a const member function - should print 130" << '\n';
+	std::cout << "\n24. Store a call to a const member function - should print 130\n";
 	functionRef<void(int)> f_print_add_const;
 	f_print_add_const.setTarget(foo, &Foo::print_add_const);
 	f_print_add_const(10);
 
-	std::cout << "\n25. Store a call to a (public) data member - no can't do! - good" << '\n';
+	std::cout << "\n25. Store a call to a (public) data member - no can't do! - good\n";
 	functionRef<int()> f_dm;
 	Foo food{ 310 };
 	//f_dm.setTarget(food, &Foo::_num);	// prevented at compile time good!
 	//std::cout << f_dm() << '\n';
 
-	std::cout << "\n26. Store a call to a free function and bind its argument with std::bind" << '\n';
-	std::cout << "should print 31337" << '\n';
+	std::cout << "\n26. Store a call to a free function and bind its argument with std::bind\n";
+	std::cout << "should print 31337\n";
 	functionRef<void()> f_display_31337 = std::bind(print_num, 31337);
 	f_display_31337();
 
-	std::cout << "\n27. store a call to a member function and object and bind its argument with std::placeholders::_1" << '\n';
-	std::cout << "should print 120" << '\n';
+	std::cout << "\n27. store a call to a member function and object and bind its argument with std::placeholders::_1\n";
+	std::cout << "should print 120\n";
 	using std::placeholders::_1;
 	functionRef<void(int)> f_add_display2 = std::bind(&Foo::print_add, foo, _1);
 	f_add_display2(20);
 
-	std::cout << "\n28. assign new call to the same function" << '\n';
-	std::cout << "should print 20" << '\n';
+	std::cout << "\n28. assign new call to the same function\n";
+	std::cout << "should print 20\n";
 	f_add_display2 = print_num_alternative;
 	f_add_display2(20);
 
-	std::cout << "\n29. store a call to a stateless function object (functor)" << '\n';
-	std::cout << "should print 18" << '\n';
+	std::cout << "\n29. store a call to a stateless function object (functor)\n";
+	std::cout << "should print 18\n";
 	functionRef<void(int)> f_display_obj = printNum();
 	f_display_obj(18);
 
-	std::cout << "\n30. store a call to a stateful function object (functor)" << '\n';
-	std::cout << "should print 27" << '\n';
+	std::cout << "\n30. store a call to a stateful function object (functor)\n";
+	std::cout << "should print 27\n";
 	functionRef<void(int)> f_display_obj2 = PrintNumStateful();
 	f_display_obj2(17);
 
-	std::cout << "\n31. store a functor directly and invoke its operator()" << '\n';
-	std::cout << "should print 300" << '\n';
+	std::cout << "\n31. store a functor directly and invoke its operator()\n";
+	std::cout << "should print 300\n";
 	PrintNumStateful pns{ 100 };
 	functionRef<void(int)> f_display_obj3{ pns };
 	f_display_obj3(200);
 
-	std::cout << "\n32. Swapping - should print 300 again" << '\n';
+	std::cout << "\n32. Swapping - should print 300 again\n";
 	functionRef<void(int)> f_swapped;
 	f_swapped.swap(f_display_obj3);
 	f_swapped(200);
 
-	if (!f_display_obj3)
-		std::cout << "swapped object f_display_obj3 nulled - good" << '\n';
+	if ( !f_display_obj3 )
+		std::cout << "swapped object f_display_obj3 nulled - good\n";
 	else
-		std::cout << "swapped object f_display_obj3 still lives - bad" << '\n';
+		std::cout << "swapped object f_display_obj3 still lives - bad\n";
 
-	std::cout << "\n33. Calling virtual member function" << '\n';
+	std::cout << "\n33. Calling virtual member function\n";
 	VImpl vimpl;
 	functionRef<void(std::string)> fv;
 	fv.setTarget(vimpl, &VImpl::callMe);
@@ -434,7 +435,7 @@ int main()
 
 	vimpl.setBase(100);
 	vimpl.setC('h');
-	std::cout << "\n33. Retargeting to const virtual member function" << '\n';
+	std::cout << "\n33. Retargeting to const virtual member function\n";
 	fv.setTarget(vimpl, &VImpl::ccallMe);
 	fv("const virtual access too!?");
 
@@ -446,7 +447,7 @@ int main()
 	std::cout << "alignof(functionRef<int(std::string, int, int, double, long double, std::string)>)="
 		<< alignof(functionRef<int(std::string, int, int, double, long double, std::string)>) << '\n';
 
-	std::cout << "echo %errorlevel% should return 11" << '\n';
+	std::cout << "echo %errorlevel% should return 11\n";
 
 	std::system( "pause" );
 	return state == 11 ? EXIT_SUCCESS : EXIT_FAILURE;

@@ -1,5 +1,6 @@
 #include <type_traits>
 
+
 //============================================================
 //	\class	functionRef
 //
@@ -12,46 +13,43 @@ template <typename Callable>
 class functionRef
 {};
 
-template <typename TRet,
-	typename... TArgs>
+template <typename TRet, typename... TArgs>
 class functionRef<TRet( TArgs... )>
 {
-	using TCallback = TRet( void*, TArgs... );
-	using PCallback = std::add_pointer_t<TCallback>;
+	using F = TRet( void*, TArgs... );	// function type
+	using FP = std::add_pointer_t<F>;	// function pointer type
 
-	void* m_pAddr;		// where to *call*
-	PCallback m_pFn;	// the function signature
+	void* m_pAddr;	// memory address to call/jump to
+	FP m_pFn;		// function signature to call with
 public:
 	functionRef()
 		:
-		m_pAddr{ nullptr },
-		m_pFn{ nullptr }
+		m_pAddr{nullptr},
+		m_pFn{nullptr}
 	{}
 	functionRef( std::nullptr_t )
 		:
-		m_pAddr{ nullptr },
-		m_pFn{ nullptr }
+		m_pAddr{nullptr},
+		m_pFn{nullptr}
 	{}
 
 	//===================================================
 	//	\function	functionRef<...>
 	//	\brief  templated constructor
 	//	\date	2019/11/20 19:52
-	template <typename F,
-		typename = std::enable_if_t<std::is_convertible_v<std::result_of_t<F( TArgs... )>,
-			TRet>>,
-		typename = std::enable_if_t<std::is_invocable_r_v<TRet, F, TArgs...>>,
-		typename = std::enable_if_t<!std::is_same_v<std::decay_t<F>, functionRef>>
-	>
-	constexpr functionRef( F&& callable )
+	template <typename FType,
+		typename = std::enable_if_t<std::is_convertible_v<std::invoke_result_t<FType, TArgs...>, TRet>>,
+		typename = std::enable_if_t<std::is_invocable_r_v<TRet, FType, TArgs...>>,
+		typename = std::enable_if_t<!std::is_same_v<std::decay_t<FType>, functionRef>>>
+	constexpr functionRef( FType&& callable )
 		:
-		m_pAddr{ (void*)std::addressof( callable ) }
+		m_pAddr{(void*)std::addressof( callable )}
 	{
 		if ( std::addressof( callable ) != nullptr )
 		{
-			m_pFn = [](void* po, TArgs... args) -> TRet
+			m_pFn = []( void* po, TArgs... args ) -> TRet
 			{
-				return ( *reinterpret_cast<std::add_pointer_t<F>>( po ) )
+				return ( *reinterpret_cast<std::add_pointer_t<FType>>( po ) )
 					( std::forward<TArgs>( args )... );
 			};
 		}
@@ -70,16 +68,18 @@ public:
 
 	functionRef( const functionRef& rhs )
 		:
-		m_pAddr{ rhs.m_pAddr },
-		m_pFn{ rhs.m_pFn }
-	{}
+		m_pAddr{rhs.m_pAddr},
+		m_pFn{rhs.m_pFn}
+	{
+
+	}
 
 	functionRef& operator=( const functionRef& rhs )
 	{
 		if ( this != &rhs )
 		{
-			void* temp_addr{ rhs.m_pAddr };
-			PCallback temp_pfn{ rhs.m_pFn };
+			void* temp_addr{rhs.m_pAddr};
+			FP temp_pfn{rhs.m_pFn};
 			std::swap( m_pAddr, temp_addr );
 			std::swap( m_pFn, temp_pfn );
 		}
@@ -88,17 +88,13 @@ public:
 
 	functionRef( functionRef&& rhs ) noexcept
 		:
-		m_pAddr{ std::move( rhs.m_pAddr ) },
-		m_pFn{ std::move( rhs.m_pFn ) }
+		m_pAddr{std::move( rhs.m_pAddr )},
+		m_pFn{std::move( rhs.m_pFn )}
 	{}
 
-	functionRef &operator=( functionRef&& rhs ) noexcept
+	functionRef& operator=( functionRef&& rhs ) noexcept
 	{
-		if ( this != &rhs )
-		{
-			std::swap( m_pAddr, rhs.m_pAddr );
-			std::swap( m_pFn, rhs.m_pFn );
-		}
+		swap( rhs );
 		return *this;
 	}
 
@@ -110,12 +106,11 @@ public:
 	
 	//===================================================
 	//	\function	setTarget
-	//	\brief  use setTarget to set a member pointer as a target
+	//	\brief  use this to set a member pointer as the target callable
 	//	\date	2019/11/20 20:55
 	template <typename T,
-		typename FType, 
-		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>>
-	>
+		typename FType,
+		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>>>
 	void setTarget( T& obj,
 		FType f )
 	{
@@ -131,11 +126,10 @@ public:
 		}
 	}
 
-	// Delete r-value cappables. Not going to manage temporary callables here
+	// delete r-value callables. functionRef will not manage/own temporaries.
 	template <typename T,
 		typename FType,
-		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>>
-	>
+		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>> >
 	void setTarget( T&& ) = delete;
 	
 	bool reset() noexcept
