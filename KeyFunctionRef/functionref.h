@@ -11,7 +11,9 @@
 //=============================================================
 template <typename Callable>
 class functionRef
-{};
+{
+
+};
 
 template <typename TRet, typename... TArgs>
 class functionRef<TRet( TArgs... )>
@@ -19,19 +21,24 @@ class functionRef<TRet( TArgs... )>
 	using F = TRet( void*, TArgs... );	// function type
 	using FP = std::add_pointer_t<F>;	// function pointer type
 
-	void* m_pAddr;	// memory address to call/jump to
-	FP m_pFn;		// function signature to call with
+	void* m_pAddr;	// memory address or object
+	FP m_pFn;		// function signature
 public:
 	functionRef()
 		:
 		m_pAddr{nullptr},
 		m_pFn{nullptr}
-	{}
+	{
+
+	}
+
 	functionRef( std::nullptr_t )
 		:
 		m_pAddr{nullptr},
 		m_pFn{nullptr}
-	{}
+	{
+
+	}
 
 	//===================================================
 	//	\function	functionRef<...>
@@ -47,9 +54,9 @@ public:
 	{
 		if ( std::addressof( callable ) != nullptr )
 		{
-			m_pFn = []( void* po, TArgs... args ) -> TRet
+			m_pFn = []( void* pO, TArgs... args ) -> TRet
 			{
-				return ( *reinterpret_cast<std::add_pointer_t<FType>>( po ) )
+				return ( *reinterpret_cast<std::add_pointer_t<FType>>( pO ) )
 					( std::forward<TArgs>( args )... );
 			};
 		}
@@ -60,7 +67,6 @@ public:
 		}
 	}
 
-	// this is the destructor for functionRef not the underlying object
 	~functionRef() noexcept
 	{
 		reset();
@@ -76,13 +82,10 @@ public:
 
 	functionRef& operator=( const functionRef& rhs )
 	{
-		if ( this != &rhs )
-		{
-			void* temp_addr{rhs.m_pAddr};
-			FP temp_pfn{rhs.m_pFn};
-			std::swap( m_pAddr, temp_addr );
-			std::swap( m_pFn, temp_pfn );
-		}
+		void* temp_addr{rhs.m_pAddr};
+		FP temp_pfn{rhs.m_pFn};
+		std::swap( m_pAddr, temp_addr );
+		std::swap( m_pFn, temp_pfn );
 		return *this;
 	}
 
@@ -90,7 +93,9 @@ public:
 		:
 		m_pAddr{std::move( rhs.m_pAddr )},
 		m_pFn{std::move( rhs.m_pFn )}
-	{}
+	{
+
+	}
 
 	functionRef& operator=( functionRef&& rhs ) noexcept
 	{
@@ -108,8 +113,7 @@ public:
 	//	\function	setTarget
 	//	\brief  use this to set a member pointer as the target callable
 	//	\date	2019/11/20 20:55
-	template <typename T,
-		typename FType,
+	template <typename T, typename FType,
 		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>>>
 	void setTarget( T& obj,
 		FType f )
@@ -127,9 +131,8 @@ public:
 	}
 
 	// delete r-value callables. functionRef will not manage/own temporaries.
-	template <typename T,
-		typename FType,
-		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>> >
+	template <typename T, typename FType,
+		typename = std::enable_if_t<std::is_member_function_pointer_v<FType>>>
 	void setTarget( T&& ) = delete;
 	
 	bool reset() noexcept

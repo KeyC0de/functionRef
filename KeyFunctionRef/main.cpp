@@ -449,6 +449,8 @@ int main()
 
 	std::cout << "echo %errorlevel% should return 11\n";
 
-	std::system( "pause" );
+#if defined _DEBUG && !defined NDEBUG
+	while ( !getchar() );
+#endif
 	return state == 11 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
